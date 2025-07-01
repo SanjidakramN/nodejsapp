@@ -15,12 +15,7 @@ phases:
   pre_build:
     commands:
      - echo "initiallizing terrafrom"
-     - terraform -chdir=terrfaorm init \
-         -backend-config="bucket=sanju-sanju-bucket3" \
-         -backend-config="key=eks-rds-fullstack/terraform.tfstate" \
-         -backend-config="region=us-east-1" \
-         -backend-config="dynamodb_table=sanju-sanju-table" \
-         -backend-config="encrypt=true"
+     - terraform -chdir=terrfaorm init
   build:
     commands:
      - echo "validating terraform"
