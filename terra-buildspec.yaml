@@ -1,0 +1,36 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-version:
+      nodejs: 18
+    commands:
+      - echo "installing terrafrom"
+      - curl -o terraform.zip https://releases.hashicorp.com/terraform/1.7.5/terraform_1.7.5_linux_amd64.zip
+      - unzip terraform.zip
+      - sudo mv terraform /usr/local/bin/
+      - rm terraform.zip
+      - chmod +x /usr/local/bin/terraform
+      - terraform version
+  pre_build:
+    commands:
+     - echo "initiallizing terrafrom""
+     - |
+        terraform -chdir=terrfaorm init \
+         -backend-config="bucket=sanju-sanju-bucket3" \
+         -backend-config="key=eks-rds-fullstack/terraform.tfstate" \
+         -backend-config="region=us-east-1" \
+         -backend-config="dynamodb_table=sanju-sanju-table" \
+         -backend-config="encrypt=true"
+  build:
+    commands:
+     - echo "validating terraform"
+     - terraform -chdir=terrfaorm validate
+     - echo "planing"
+     - terraform -chdir=terrfaorm plan -out=tfplan
+
+
+  post_build:
+     - echo "applying terraform"
+     - terraform -chdir=terrfaorm apply -auto-approve tfplan
+     - echo "success"
