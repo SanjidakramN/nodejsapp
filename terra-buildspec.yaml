@@ -31,6 +31,7 @@ phases:
 
 
   post_build:
+    commands:
      - echo "applying terraform"
      - terraform -chdir=terrfaorm apply -auto-approve tfplan
      - echo "success"
