@@ -1,0 +1,43 @@
+version: 0.2
+env:
+  variables:
+    ACCOUNT_ID = 454374565179
+    REGION = us-east-1
+    REPO = sanju-project
+    K8S-MANIFESTS-FILE = kubernetes-manifest-file
+phase:
+  install:
+    runtime-version:
+      nodejs: 18
+    commands:
+     - echo "installing utilities"
+      sudo apt install -y jq
+  pre_build:
+    commands:
+     - echo "setting dynamic images"
+     - export IMAGE_TAG=v1.${CODEBUILD_BUILD_NUMBER}
+     - echo "setting the ecr"
+     - aws ecr get-login-password --region $REGION | docker login --username AWS --password-stdin $ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com
+     - cd npm install && npm install dotenv && cd -
+  build:
+    commands:
+     - echo "docker build"
+     - docker build -t $REPO:$IMAGE_TAG 
+     - docker tag  $REPO:$IMAGE_TAG $ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com
+
+  post_build:
+     - echo "docker push"
+     - docker push  $ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com/$REPO:$IMAGE_TAG 
+     - echo "creating base kubernetes base directory"
+     - mkdir -p k8s-out
+
+     - sed "s|IMAGE_PLACEHOLDER|$ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com/$REPO:$IMAGE_TAG|g"
+       $K8S-MANIFESTS-FILE/deployment.yaml > k8s-out/depolyment.yaml
+  artifacts:
+    base-directory: k8s-out
+    discard-path: yes
+    file:
+    - '**/*.yaml'
+  cache:
+    path:
+      - '**/*'
